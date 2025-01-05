@@ -4,11 +4,11 @@ import datetime
 ### Read in csv of names and numbers, return tuple of hashmaps num-person and person-attended ####
 def read_roster(section: str):
     roster_dict = {}
-    with open(f"data/roster.csv", 'r') as roster:
+    with open(f"class_data/roster.csv", 'r') as roster:
         reader = csv.reader(roster)
         for lines in reader:
             # Does the current line match the current section?
-            if lines[2] == section:
+            if lines[2].strip().upper() == section:
                 roster_dict[lines[0]] = lines[1]
     return roster_dict
             
@@ -57,22 +57,24 @@ def get_section(inp: str) -> str:
         for line in reader:
             # Skip blank lines
             if len(line) > 0:
-                if line[0] == inp.strip().upper():
-                    return line[0]
+                # Search for correct section
+                curr_section = line[0].strip().upper()
+                if curr_section== inp.strip().upper():
+                    return curr_section
     return "n/a"
                     
 
 def main():
     # Get the current section
     section = get_section(input("What section? "))
-    while section != "n/a":
+    while section == "n/a":
         section = get_section(input("Sorry, that was an invalid section. Try again: "))
     
     # Get the roster for the current section
     roster = read_roster(section)
     [print(key, val) for key, val in roster.items()]
     # initialize an empty dict of id numbers and names to record who was there
-    record = read_attendance(section, datetime.date.today())
+    #record = read_attendance(section, datetime.date.today())
     user_inp = input("Enter a number; s to save; q to quit: ")
     while (user_inp != 'q'):
         if user_inp == 's':
