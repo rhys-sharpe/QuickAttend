@@ -18,29 +18,38 @@ def read_roster(section: str):
 # if s write hashmap to csv, overwriting it
 def save_attendance(section, current_record):
     # remove already
-    filtered_record = {}
+    updates = {}
     old_record = read_attendance(section, datetime.date.today())
+    old_keys = old_record.keys()
     for key in current_record:
-        if key not in old_record.keys():
-            filtered_record[key] = current_record[key]
-    with open(f"data/lab-record-{section}.csv", "a") as file:
+        if key not in old_keys or old_record[key] != current_record[key]:
+            updates[key] = current_record[key]
+    with open("class_data/record.csv", "a") as file:
         writer = csv.writer(file)
-        for id, name in filtered_record.items():
-            writer.writerow([datetime.date.today(), id, name])
+        for id, status in updates.items():
+            writer.writerow([id, datetime.date.today(), section, status])
     print("Saved!")
 
-# TODO: Update this function.
-def read_attendance(section, date):
+
+def read_attendance(section, date) -> dict[str, str]:
+    '''
+    Create a dictionary mapping student names to their attendance status.
+    Selects only for the specified section and date (like a WHERE query).
+    '''
     att_record = {}
-    with open(f"data/lab-record-{section}.csv", "r") as file:
+    with open("class_data/record.csv", "r") as file:
         reader = csv.reader(file)
         for line in reader:
             # skip blank lines
-            if len(line)>0:
-                if line[0] == str(date):
-                    att_record[line[1]] = line[2]
+            if len(line) > 0:
+                # check if it's for the right section & date
+                if line[2].strip() == section and line[1] == str(date):
+                    # map current name to attendance status
+                    print(f"line is {line}")
+                    att_record[line[0]] = line[3]
     return att_record
 
+# Fix this next
 def add_attendee(roster, record, user_inp) -> bool:
     try:
         user_inp = user_inp.strip()
@@ -60,7 +69,7 @@ def get_section(inp: str) -> str:
             if len(line) > 0:
                 # Search for correct section
                 curr_section = line[0].strip().upper()
-                if curr_section== inp.strip().upper():
+                if curr_section == inp.strip().upper():
                     return curr_section
     return "n/a"
                     
@@ -71,11 +80,14 @@ def main():
     while section == "n/a":
         section = get_section(input("Sorry, that was an invalid section. Try again: "))
     
+    # TODO: GET DATE HERE
+
     # Get the roster for the current section
     roster = read_roster(section)
     [print(key, val) for key, val in roster.items()]
     # initialize an empty dict of id numbers and names to record who was there
     record = read_attendance(section, datetime.date.today())
+    # [print(key, val) for key, val in record.items()]
     user_inp = input("Enter a number; s to save; q to quit: ")
     while (user_inp != 'q'):
         if user_inp == 's':
