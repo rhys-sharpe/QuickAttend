@@ -29,6 +29,7 @@ def save_attendance(section, current_record):
             writer.writerow([datetime.date.today(), id, name])
     print("Saved!")
 
+# TODO: Update this function.
 def read_attendance(section, date):
     att_record = {}
     with open(f"data/lab-record-{section}.csv", "r") as file:
@@ -74,7 +75,7 @@ def main():
     roster = read_roster(section)
     [print(key, val) for key, val in roster.items()]
     # initialize an empty dict of id numbers and names to record who was there
-    #record = read_attendance(section, datetime.date.today())
+    record = read_attendance(section, datetime.date.today())
     user_inp = input("Enter a number; s to save; q to quit: ")
     while (user_inp != 'q'):
         if user_inp == 's':
