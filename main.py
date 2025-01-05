@@ -4,10 +4,12 @@ import datetime
 ### Read in csv of names and numbers, return tuple of hashmaps num-person and person-attended ####
 def read_roster(section: str):
     roster_dict = {}
-    with open(f"data/roster-lab-{section}.csv", 'r') as roster:
+    with open(f"data/roster.csv", 'r') as roster:
         reader = csv.reader(roster)
         for lines in reader:
-            roster_dict[lines[0]] = lines[1]
+            # Does the current line match the current section?
+            if lines[2] == section:
+                roster_dict[lines[0]] = lines[1]
     return roster_dict
             
 
@@ -46,8 +48,27 @@ def add_attendee(roster, record, user_inp) -> bool:
     except KeyError:
         return False
 
+# TODO: Is this whole thing too complciated?
+def get_section(inp: str) -> str:
+    '''Get the class section inputted by the user.
+    Returns 'n/a' if the input string matches no section.'''
+    with open(f"system_data/sections.csv") as sections:
+        reader = csv.reader(sections)
+        for line in reader:
+            # Skip blank lines
+            if len(line) > 0:
+                if line[0] == inp.strip().upper():
+                    return line[0]
+    return "n/a"
+                    
+
 def main():
-    section = input("a or b?").strip().lower()
+    # Get the current section
+    section = get_section(input("What section? "))
+    while section != "n/a":
+        section = get_section(input("Sorry, that was an invalid section. Try again: "))
+    
+    # Get the roster for the current section
     roster = read_roster(section)
     [print(key, val) for key, val in roster.items()]
     # initialize an empty dict of id numbers and names to record who was there
