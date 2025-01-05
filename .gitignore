@@ -1,4 +1,9 @@
-data/*
+# Don't include class rosters
+class_data/*
 backups/*
+
+# Jupyter notebooks can contain output showing attendance grades
 *.ipynb
+
+# Development log
 devlog.md
