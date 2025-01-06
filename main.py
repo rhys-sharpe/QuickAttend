@@ -49,13 +49,20 @@ def read_attendance(section, date) -> dict[str, str]:
                     att_record[line[0]] = line[3]
     return att_record
 
-# Fix this next
-def add_attendee(roster, record, user_inp) -> bool:
+def add_attendee(record, user_inp, status: str) -> bool:
+    '''
+    Add the specified user to the record dictionary.
+    :param record: The record dictionary to add to/check.
+    :param user_inp: the id NUMBER of the user to add.
+    :param status: What to mark the student as. Should be one of the types defined in categories.csv.
+    :return True if the operation succeeded; False if there is no such ID in the record.
+    '''
     try:
         user_inp = user_inp.strip()
-        record[user_inp] = roster[user_inp]
+        record[user_inp] = status
         return True
     except KeyError:
+        # Key user_inp does not exist in record, aborting
         return False
 
 # TODO: Is this whole thing too complciated?
