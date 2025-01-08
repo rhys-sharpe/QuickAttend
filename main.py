@@ -1,5 +1,13 @@
 import csv
 import datetime
+from enum import Enum
+
+# TODO: Build a function to read this in later
+class Category(Enum):
+    PRESENT = 0
+    EXCUSED = 1
+    TARDY = 2
+    ABSENT = 3
 
 ### Read in csv of names and numbers, return tuple of hashmaps num-person and person-attended ####
 def read_roster(section: str):
@@ -21,13 +29,16 @@ def save_attendance(section, current_record):
     updates = {}
     old_record = read_attendance(section, datetime.date.today())
     old_keys = old_record.keys()
-    for key in current_record:
-        if key not in old_keys or old_record[key] != current_record[key]:
+    for key in current_record.keys():
+        if key not in old_keys or Category[old_record[key]] != current_record[key]:
+            if key in old_keys:
+                print(f"old_key: {old_record[key]}")
+            print(current_record[key])
             updates[key] = current_record[key]
     with open("class_data/record.csv", "a") as file:
         writer = csv.writer(file)
         for id, status in updates.items():
-            writer.writerow([id, datetime.date.today(), section, status])
+            writer.writerow([id, datetime.date.today(), section, str(status.name)])
     print("Saved!")
 
 
@@ -92,7 +103,7 @@ def main():
     # Get the roster for the current section
     roster = read_roster(section)
     [print(key, val) for key, val in roster.items()]
-    # initialize an empty dict of id numbers and names to record who was there
+    # initialize an empty dict of id numbers and statuses to record who was there
     record = read_attendance(section, datetime.date.today())
     # [print(key, val) for key, val in record.items()]
     user_inp = input("Enter a number; s to save; q to quit: ")
@@ -104,7 +115,7 @@ def main():
             print(f"Attended: {record}")
             print(f"Count: {len(record)} / {len(roster)}")
         else:
-            if (add_attendee(roster, record, user_inp)):
+            if (add_attendee(record, user_inp, Category(int(input("Enter status: "))))):
                 print("Added user!")
                 #print(f"Added{roster[user_inp]}")
             else:
