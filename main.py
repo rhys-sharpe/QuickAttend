@@ -11,6 +11,7 @@ class Category(Enum):
 
 ### Read in csv of names and numbers, return tuple of hashmaps num-person and person-attended ####
 def read_roster(section: str):
+    '''Read the class roster from a CSV.'''
     roster_dict = {}
     with open(f"class_data/roster.csv", 'r') as roster:
         reader = csv.reader(roster)
@@ -25,12 +26,13 @@ def read_roster(section: str):
 # if num typed mark present
 # if s write hashmap to csv, overwriting it
 def save_attendance(section, current_record):
+    '''Writes the current attendance dict to a CSV.'''
     # remove already
     updates = {}
     old_record = read_attendance(section, datetime.date.today())
     old_keys = old_record.keys()
     for key in current_record.keys():
-        if key not in old_keys or Category[old_record[key]] != current_record[key]:
+        if key not in old_keys or old_record[key] != current_record[key]:
             if key in old_keys:
                 print(f"old_key: {old_record[key]}")
             print(current_record[key])
@@ -42,7 +44,7 @@ def save_attendance(section, current_record):
     print("Saved!")
 
 
-def read_attendance(section, date) -> dict[str, str]:
+def read_attendance(section, date) -> dict[str, Category]:
     '''
     Create a dictionary mapping student names to their attendance status.
     Selects only for the specified section and date (like a WHERE query).
@@ -57,7 +59,7 @@ def read_attendance(section, date) -> dict[str, str]:
                 if line[2].strip() == section and line[1] == str(date):
                     # map current name to attendance status
                     print(f"line is {line}")
-                    att_record[line[0]] = line[3]
+                    att_record[line[0]] = Category[line[3]]
     return att_record
 
 def add_attendee(record, user_inp, status: str) -> bool:
@@ -92,7 +94,8 @@ def get_section(inp: str) -> str:
     return "n/a"
                     
 
-def main():
+def get_attendance():
+    '''Main user interface function.'''
     # Get the current section
     section = get_section(input("What section? "))
     while section == "n/a":
@@ -115,14 +118,15 @@ def main():
             print(f"Attended: {record}")
             print(f"Count: {len(record)} / {len(roster)}")
         else:
-            if (add_attendee(record, user_inp, Category(int(input("Enter status: "))))):
-                print("Added user!")
-                #print(f"Added{roster[user_inp]}")
+            inp_status = Category(int(input("Enter status: ")))
+            if (add_attendee(record, user_inp, inp_status)):
+                print(f"Added user{roster[user_inp]} with status {inp_status}")
             else:
                 print("Invalid, please try again")
         user_inp = input("Enter a number; s to save; q to quit: ")
     else:
         save_attendance(section, record)
 
-### Call main and get lab section, pass to top ###
-main()
+### Execute user interface if not used as a package ###
+if __name__ == "__main__":
+    get_attendance()
