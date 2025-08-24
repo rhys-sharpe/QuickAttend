@@ -21,26 +21,46 @@ def read_roster(section: str):
                 roster_dict[lines[0]] = lines[1]
     return roster_dict
             
+def write_roster(updated_roster, section):
+    with open("class_data/record.csv", "a") as file:
+        writer = csv.writer(file)
+        for id, status in updated_roster.items():
+            writer.writerow([id, datetime.date.today(), section, str(status.name)])
 
-### while not 'q', get input ###
-# if num typed mark present
-# if s write hashmap to csv, overwriting it
+
+def bulk_update(section, date, old_record):
+    '''Triggered each new class period. Bulk-marks students as absent unless specified otherwise.
+    TODO: Set default in config later.'''
+    print("entering bulk update")
+    roster = read_roster(section)
+    recorded_keys = old_record.keys()
+    updated_record = old_record
+    for id in roster.keys():
+        if id not in recorded_keys:
+            updated_record[id] = Category.ABSENT
+    return updated_record
+
 def save_attendance(section, current_record):
-    '''Writes the current attendance dict to a CSV.'''
+    '''Writes the current attendance dict to a CSV.
+    If no entries have been added for this date and section, then all students will be marked as absent through
+    the bulk_update function. This does not affect '''
     # remove already
     updates = {}
     old_record = read_attendance(section, datetime.date.today())
     old_keys = old_record.keys()
     for key in current_record.keys():
-        if key not in old_keys or old_record[key] != current_record[key]:
-            if key in old_keys:
-                print(f"old_key: {old_record[key]}")
-            print(current_record[key])
-            updates[key] = current_record[key]
-    with open("class_data/record.csv", "a") as file:
-        writer = csv.writer(file)
-        for id, status in updates.items():
-            writer.writerow([id, datetime.date.today(), section, str(status.name)])
+        # Check and see if this key is missing. If it is, then bulk_update has not yet run or a student has been hot-swapped in.
+        # The latter should not happen.
+        # This will mark all students as absent, then update the current one. Should only ever run once in the for-loop.
+        if key not in old_keys:
+             updates = bulk_update(section, datetime.date.today(), old_record)
+        # else if old_record[key] != current_record[key]:
+            # if key in old_keys:
+            #     print(f"old_key: {old_record[key]}")
+            # print(current_record[key])
+        updates[key] = current_record[key]
+    print(updates)
+    write_roster(updates, section)
     print("Saved!")
 
 
@@ -109,7 +129,7 @@ def get_attendance():
     # initialize an empty dict of id numbers and statuses to record who was there
     record = read_attendance(section, datetime.date.today())
     # [print(key, val) for key, val in record.items()]
-    user_inp = input("Enter a number; s to save; q to quit: ")
+    user_inp = input("Enter a number; s to save; p to print; q to quit: ")
     while (user_inp != 'q'):
         if user_inp == 's':
             save_attendance(section, record)
