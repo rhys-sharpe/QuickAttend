@@ -1,3 +1,8 @@
+DROP TABLE IF EXISTS Section;
+DROP TABLE IF EXISTS Category;
+DROP TABLE IF EXISTS Student;
+DROP TABLE IF EXISTS Attended;
+
 CREATE TABLE Section (
     label VARCHAR(2),
     PRIMARY KEY (label)
@@ -6,7 +11,7 @@ CREATE TABLE Section (
 CREATE TABLE Category (
     category VARCHAR(15),
     score INT,
-    PRIMARY KEY category
+    PRIMARY KEY (category)
 );
 
 CREATE TABLE Student (
