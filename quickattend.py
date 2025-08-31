@@ -1,14 +1,7 @@
 import csv
 import datetime
 import db_man
-from enum import Enum
-
-# TODO: Build a function to read this in later
-class Category(Enum):
-    PRESENT = 0
-    EXCUSED = 1
-    TARDY = 2
-    ABSENT = 3
+import category.Category
 
 ### Read in csv of names and numbers, return tuple of hashmaps num-person and person-attended ####
 def read_roster(section: str):
@@ -44,7 +37,7 @@ def bulk_update(section, date, old_record):
 def save_attendance(section, current_record):
     '''Writes the current attendance dict to a CSV.
     If no entries have been added for this date and section, then all students will be marked as absent through
-    the bulk_update function. This does not affect '''
+    the bulk_update function. This does not affect already added values.'''
     # remove already
     updates = {}
     old_record = read_attendance(section, datetime.date.today())
@@ -100,9 +93,19 @@ def add_attendee(record, user_inp, status: str) -> bool:
         return False
 
 # TODO: Is this whole thing too complciated?
-def get_section(inp: str) -> str:
+def get_section(dbman: DatabaseManager, inp: str) -> str:
     '''Get the class section inputted by the user.
     Returns 'n/a' if the input string matches no section.'''
+    
+    valid_sections = dbman.read_sections()
+    inp_processed = inp.strip().upper()
+    for section in valid_sections:
+        if section.strip().upper() == inp_processed:
+            return section
+    else:
+        return "n/a"
+
+
     with open(f"system_data/sections.csv") as sections:
         reader = csv.reader(sections)
         for line in reader:
@@ -117,15 +120,19 @@ def get_section(inp: str) -> str:
 
 def get_attendance():
     '''Main user interface function.'''
+
+    # Initialize database interface
+    dbman = DatabaseManager()
+    
     # Get the current section
-    section = get_section(input("What section? "))
+    section = get_section(dbman, input("What section? "))
     while section == "n/a":
-        section = get_section(input("Sorry, that was an invalid section. Try again: "))
+        section = get_section(dbman, input("Sorry, that was an invalid section. Try again: "))
     
     # TODO: GET DATE HERE
 
     # Get the roster for the current section
-    roster = read_roster(section)
+    roster = dbman.read_roster(section)
     [print(key, val) for key, val in roster.items()]
     # initialize an empty dict of id numbers and statuses to record who was there
     record = read_attendance(section, datetime.date.today())
@@ -147,6 +154,8 @@ def get_attendance():
         user_inp = input("Enter a number; s to save; q to quit: ")
     else:
         save_attendance(section, record)
+        # Close database connection
+        del dbman
 
 ### Execute user interface if not used as a package ###
 if __name__ == "__main__":
