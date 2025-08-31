@@ -27,7 +27,7 @@ CREATE TABLE Attended (
     class_date DATETIME,
     section VARCHAR(2),
     attended VARCHAR(15),
-    PRIMARY KEY (id),
+    PRIMARY KEY (id, class_date, section),
     FOREIGN KEY (section) REFERENCES Section,
     FOREIGN KEY (attended) REFERENCES Category
 );
