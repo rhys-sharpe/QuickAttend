@@ -1,7 +1,7 @@
 import csv
 import datetime
-import db_man
-import category.Category
+from db_man import DatabaseManager
+from category import Category
 
 ### Read in csv of names and numbers, return tuple of hashmaps num-person and person-attended ####
 def read_roster(section: str):

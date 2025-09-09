@@ -16,7 +16,8 @@ CREATE TABLE Category (
 
 CREATE TABLE Student (
     id INT,
-    student_name VARCHAR(75),
+    first_name VARCHAR(25),
+    last_name VARCHAR(25),
     section VARCHAR(2),
     PRIMARY KEY (id),
     FOREIGN KEY (section) REFERENCES Section
