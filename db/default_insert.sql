@@ -15,7 +15,8 @@ INSERT INTO Student (id, first_name, last_name, section) VALUES
     (0, 'Allamaraine', 'Johnson', 'A'),
     (1, 'Michael', 'Phillips', 'B'),
     (2, 'Whosiwhatsit', 'Anonymous', 'A'),
-    (3, 'Thingamajig', 'Anonymous', 'B');
+    (3, 'Thingamajig', 'Anonymous', 'B'),
+    (4, 'James', 'Thingy', 'A');
 
 INSERT INTO Attended (id, class_date, section, attended) VALUES
     (0, '2025-09-01', 'A', 'PRESENT')
