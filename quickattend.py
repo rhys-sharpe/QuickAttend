@@ -4,7 +4,7 @@ from category import Category
 from enum import Enum
 from cmd_mod import Cmd
 
-cmds = {'q': 0, 'quit': 0, 'add': 1, "set-date": 2, "save-record": 3, "show": 4, "help": 5}
+cmds = {'q': 0, 'quit': 0, 'a': 1, 'add': 1, "set-date": 2, "save-record": 3, "show": 4, "help": 5}
 
 def add_record(roster, new_entries):
     # first_names = [x[0] for x in roster.values()]
@@ -69,10 +69,10 @@ def run_interface():
     
     # Get the roster for the current section
     roster = dbman.read_roster(section)
-    [print(key, val) for key, val in roster.items()]
+    # [print(key, val) for key, val in roster.items()]
     
     # Get all the values already entered into the database
-    saved_record:dict[int, Category] = dbman.read_attendance(section, current_date)
+    saved_record: dict[int, Category] = dbman.read_attendance(section, current_date)
     new_entries: dict[int, Category] = {}
 
     while (user_cmd := input("Enter a command (help for all examples): ")) != 0:

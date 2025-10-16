@@ -59,9 +59,9 @@ class DatabaseManager:
         additions = {}
         updates = {}
         old_record = self.read_attendance(section, date)
-        print(old_record)
-        print(type(old_record))
-        print(not old_record)
+        # print(old_record)
+        # print(type(old_record))
+        # print(not old_record)
         if not old_record:
             additions = self._add_all(section)
         # Loop through update keys, which will either be empty
@@ -69,8 +69,8 @@ class DatabaseManager:
         # or will contain all of the members with their
         # attendance set to a default value (currently, absent)
         # TODO: Fix the above comment (see devlog)
-        print(f"additions is {additions}")
-        print(f"old record is {old_record}")
+        # print(f"additions is {additions}")
+        # print(f"old record is {old_record}")
         for key in new_record.keys():
             if key in old_record.keys():
                 if old_record[key] != new_record[key]:
@@ -90,13 +90,13 @@ class DatabaseManager:
             # if key in new_record[key]:
             #     if key not in old_record.keys() or old_record[key] != new_record[key]:
             #         updates[key] = new_record[key]
-        print(f"additions is {additions}")
+        # print(f"additions is {additions}")
 
         # If there are any new people to add, write to the database
         if additions:
             script = f"INSERT INTO Attended(id, class_date, section, attended) VALUES "
             parsed_record_list = [f"({sid}, '{datetime.date.today()}', '{section}', '{additions[sid].name}')" for sid in additions]
-            print(f"Parsed record list is {parsed_record_list}")
+            # print(f"Parsed record list is {parsed_record_list}")
             for value in parsed_record_list:
                 script += value
                 # Blegh...I hate this but am not sure how to improve it
@@ -104,16 +104,15 @@ class DatabaseManager:
                     script += ", "
                 else:
                     script += ";"
-            print(f"script is {script}")
+            # print(f"script is {script}")
             self._update_db(script)
         
         # If there's any values to change, write to database one at a time
         if updates:
             script = ""
             for key in updates.keys():
-                script += self._generate_update_block(key, section, date, updates[key]) + " "
-            print(f"update script is {script}")
-            self._update_db(script)
+                script = self._generate_update_block(key, section, date, updates[key]) + " "
+                self._update_db(script)
 
 
     def _add_all(self, section) -> dict[int, Category]:
