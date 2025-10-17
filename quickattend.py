@@ -42,6 +42,9 @@ def display_record(dbman, roster, section, new_entries, current_date):
     print(f"\n CURRENT RECORD \n")
     [print(roster[key], val) for key, val in saved_record.items()]              
 
+def set_date(date_str: str) -> datetime.date:
+    return datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
+
 def print_help():
     print(f"Potential commands: ")
     [print(f"{key}: {Cmd(val).name}") for key, val in cmds.items()]
@@ -87,7 +90,8 @@ def run_interface():
             case Cmd.ADD_RECORD:
                 new_entries = add_record(roster, new_entries)
             case Cmd.SET_DATE:
-                raise NotImplementedError
+                current_date = set_date(input("Input the date to edit: "))
+                print(f"Date is set to {current_date}")
             case Cmd.SAVE_RECORD:
                 save_record(dbman, section, new_entries, current_date)
             case Cmd.DISPLAY_RECORD:

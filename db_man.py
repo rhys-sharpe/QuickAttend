@@ -47,7 +47,7 @@ class DatabaseManager:
     def _generate_update_block(self, sid: int, section: str, date: datetime.date, attended: Category) -> str:
         return f"UPDATE Attended SET attended = '{attended.name}' WHERE id = {sid} AND class_date = '{date}' AND section = '{section}';"
 
-    def update_record(self, section, new_record: dict[int, Category], date=datetime.date.today()):
+    def update_record(self, section, new_record: dict[int, Category], current_date):
         '''Writes 'record' to the database.'''
         # updates = record # wat
         
@@ -58,7 +58,7 @@ class DatabaseManager:
 
         additions = {}
         updates = {}
-        old_record = self.read_attendance(section, date)
+        old_record = self.read_attendance(section, current_date)
         # print(old_record)
         # print(type(old_record))
         # print(not old_record)
@@ -95,7 +95,7 @@ class DatabaseManager:
         # If there are any new people to add, write to the database
         if additions:
             script = f"INSERT INTO Attended(id, class_date, section, attended) VALUES "
-            parsed_record_list = [f"({sid}, '{datetime.date.today()}', '{section}', '{additions[sid].name}')" for sid in additions]
+            parsed_record_list = [f"({sid}, '{current_date}', '{section}', '{additions[sid].name}')" for sid in additions]
             # print(f"Parsed record list is {parsed_record_list}")
             for value in parsed_record_list:
                 script += value
@@ -111,7 +111,7 @@ class DatabaseManager:
         if updates:
             script = ""
             for key in updates.keys():
-                script = self._generate_update_block(key, section, date, updates[key]) + " "
+                script = self._generate_update_block(key, section, current_date, updates[key]) + " "
                 self._update_db(script)
 
 
@@ -131,5 +131,5 @@ if __name__ == "__main__":
     print(roster)
     print(dbman.read_sections())
     print(dbman.read_attendance('A', '2025-08-30'))
-    print(dbman.update_record('A', {0: Category.PRESENT, 2: Category.ABSENT, 3: Category.TARDY}))
+    # print(dbman.update_record('A', {0: Category.PRESENT, 2: Category.ABSENT, 3: Category.TARDY}))
     del dbman
