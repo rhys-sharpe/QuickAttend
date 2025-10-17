@@ -1,152 +1,107 @@
-import csv
 import datetime
+from db_man import DatabaseManager
+from category import Category
 from enum import Enum
+from cmd_mod import Cmd
 
-# TODO: Build a function to read this in later
-class Category(Enum):
-    PRESENT = 0
-    EXCUSED = 1
-    TARDY = 2
-    ABSENT = 3
+cmds = {'q': 0, 'quit': 0, 'a': 1, 'add': 1, "set-date": 2, "save-record": 3, "show": 4, "help": 5}
 
-### Read in csv of names and numbers, return tuple of hashmaps num-person and person-attended ####
-def read_roster(section: str):
-    '''Read the class roster from a CSV.'''
-    roster_dict = {}
-    with open(f"class_data/roster.csv", 'r') as roster:
-        reader = csv.reader(roster)
-        for lines in reader:
-            # Does the current line match the current section?
-            if lines[2].strip().upper() == section:
-                roster_dict[lines[0]] = lines[1]
-    return roster_dict
+def add_record(roster, new_entries):
+    # first_names = [x[0] for x in roster.values()]
+    added_val = False
+    while not added_val:
+        fn_input = input("Enter the first name of a student: ").strip()
+        if fn_input == "quit" or fn_input == "q":
+            added_val = True
+            continue
+        for id, (fn, ln) in roster.items():
+            if fn == fn_input:
+                try:
+                    att_input = Category[input("Enter status: ").strip().upper()]
+                    new_entries[id] = att_input
+                    added_val = True
+                    break
+                except KeyError:
+                    print("Status not recognized; please try again.")
+                    break
+        if not added_val:
+            print("Could not find student, please try again.")
+    return new_entries
             
-def write_roster(updated_roster, section):
-    with open("class_data/record.csv", "a") as file:
-        writer = csv.writer(file)
-        for id, status in updated_roster.items():
-            writer.writerow([id, datetime.date.today(), section, str(status.name)])
+        
+    # while (student := input("Enter the first name of a student: ").strip() not in first_names):
+    #     print("Name not found; try again")
+    # new_entries[]
 
+def save_record(dbman, section, new_entries, current_date):
+    dbman.update_record(section, new_entries, current_date)
 
-def bulk_update(section, date, old_record):
-    '''Triggered each new class period. Bulk-marks students as absent unless specified otherwise.
-    TODO: Set default in config later.'''
-    print("entering bulk update")
-    roster = read_roster(section)
-    recorded_keys = old_record.keys()
-    updated_record = old_record
-    for id in roster.keys():
-        if id not in recorded_keys:
-            updated_record[id] = Category.ABSENT
-    return updated_record
+def display_record(dbman, roster, section, new_entries, current_date):
+    dbman.update_record(section, new_entries, current_date)    
+    saved_record: dict[int, Category] = dbman.read_attendance(section, current_date)
+    print(f"\n CURRENT RECORD \n")
+    [print(roster[key], val) for key, val in saved_record.items()]              
 
-def save_attendance(section, current_record):
-    '''Writes the current attendance dict to a CSV.
-    If no entries have been added for this date and section, then all students will be marked as absent through
-    the bulk_update function. This does not affect '''
-    # remove already
-    updates = {}
-    old_record = read_attendance(section, datetime.date.today())
-    old_keys = old_record.keys()
-    for key in current_record.keys():
-        # Check and see if this key is missing. If it is, then bulk_update has not yet run or a student has been hot-swapped in.
-        # The latter should not happen.
-        # This will mark all students as absent, then update the current one. Should only ever run once in the for-loop.
-        if key not in old_keys:
-             updates = bulk_update(section, datetime.date.today(), old_record)
-        # else if old_record[key] != current_record[key]:
-            # if key in old_keys:
-            #     print(f"old_key: {old_record[key]}")
-            # print(current_record[key])
-        updates[key] = current_record[key]
-    print(updates)
-    write_roster(updates, section)
-    print("Saved!")
+def set_date(date_str: str) -> datetime.date:
+    return datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
 
+def print_help():
+    print(f"Potential commands: ")
+    [print(f"{key}: {Cmd(val).name}") for key, val in cmds.items()]
 
-def read_attendance(section, date) -> dict[str, Category]:
-    '''
-    Create a dictionary mapping student names to their attendance status.
-    Selects only for the specified section and date (like a WHERE query).
-    '''
-    att_record = {}
-    with open("class_data/record.csv", "r") as file:
-        reader = csv.reader(file)
-        for line in reader:
-            # skip blank lines
-            if len(line) > 0:
-                # check if it's for the right section & date
-                if line[2].strip() == section and line[1] == str(date):
-                    # map current name to attendance status
-                    print(f"line is {line}")
-                    att_record[line[0]] = Category[line[3]]
-    return att_record
-
-def add_attendee(record, user_inp, status: str) -> bool:
-    '''
-    Add the specified user to the record dictionary.
-    :param record: The record dictionary to add to/check.
-    :param user_inp: the id NUMBER of the user to add.
-    :param status: What to mark the student as. Should be one of the types defined in categories.csv.
-    :return True if the operation succeeded; False if there is no such ID in the record.
-    '''
-    try:
-        user_inp = user_inp.strip()
-        record[user_inp] = status
-        return True
-    except KeyError:
-        # Key user_inp does not exist in record, aborting
-        return False
-
-# TODO: Is this whole thing too complciated?
-def get_section(inp: str) -> str:
+def validate_section(dbman: DatabaseManager, inp: str) -> str:
     '''Get the class section inputted by the user.
     Returns 'n/a' if the input string matches no section.'''
-    with open(f"system_data/sections.csv") as sections:
-        reader = csv.reader(sections)
-        for line in reader:
-            # Skip blank lines
-            if len(line) > 0:
-                # Search for correct section
-                curr_section = line[0].strip().upper()
-                if curr_section == inp.strip().upper():
-                    return curr_section
-    return "n/a"
-                    
-
-def get_attendance():
-    '''Main user interface function.'''
-    # Get the current section
-    section = get_section(input("What section? "))
-    while section == "n/a":
-        section = get_section(input("Sorry, that was an invalid section. Try again: "))
-    
-    # TODO: GET DATE HERE
-
-    # Get the roster for the current section
-    roster = read_roster(section)
-    [print(key, val) for key, val in roster.items()]
-    # initialize an empty dict of id numbers and statuses to record who was there
-    record = read_attendance(section, datetime.date.today())
-    # [print(key, val) for key, val in record.items()]
-    user_inp = input("Enter a number; s to save; p to print; q to quit: ")
-    while (user_inp != 'q'):
-        if user_inp == 's':
-            save_attendance(section, record)
-        elif user_inp == 'p':
-            print(f"Roster: {roster}")
-            print(f"Attended: {record}")
-            print(f"Count: {len(record)} / {len(roster)}")
-        else:
-            inp_status = Category(int(input("Enter status: ")))
-            if (add_attendee(record, user_inp, inp_status)):
-                print(f"Added user{roster[user_inp]} with status {inp_status}")
-            else:
-                print("Invalid, please try again")
-        user_inp = input("Enter a number; s to save; q to quit: ")
+    valid_sections = [s.strip().upper() for s in dbman.read_sections()]
+    inp_processed = inp.strip().upper()
+    for section in valid_sections:
+        if section == inp_processed:
+            return section
     else:
-        save_attendance(section, record)
+        return "n/a"
+    
 
-### Execute user interface if not used as a package ###
-if __name__ == "__main__":
-    get_attendance()
+def run_interface():
+    '''Main user interface function.'''
+    dbman = DatabaseManager()
+    current_date = datetime.date.today()
+
+    # Got some help from Copilot for streamlining this one...
+    while (section := validate_section(dbman, input("What section? "))) == "n/a":
+        print("Invalid section, try again.")
+    
+    # Get the roster for the current section
+    roster = dbman.read_roster(section)
+    # [print(key, val) for key, val in roster.items()]
+    
+    # Get all the values already entered into the database
+    saved_record: dict[int, Category] = dbman.read_attendance(section, current_date)
+    new_entries: dict[int, Category] = {}
+
+    while (user_cmd := input("Enter a command (help for all examples): ")) != 0:
+        try:
+            user_cmd = Cmd(cmds[user_cmd])
+        except KeyError:
+            print("Did not recognize command; please try again")
+            continue
+        match user_cmd:
+            case Cmd.QUIT:
+                break
+            case Cmd.ADD_RECORD:
+                new_entries = add_record(roster, new_entries)
+            case Cmd.SET_DATE:
+                current_date = set_date(input("Input the date to edit: "))
+                print(f"Date is set to {current_date}")
+            case Cmd.SAVE_RECORD:
+                save_record(dbman, section, new_entries, current_date)
+            case Cmd.DISPLAY_RECORD:
+                display_record(dbman, roster, section, new_entries, current_date)
+            case Cmd.HELP:
+                print_help() 
+
+if __name__ == "__main__":     
+    run_interface()
+   
+
+
+

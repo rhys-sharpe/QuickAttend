@@ -1,0 +1,34 @@
+DROP TABLE IF EXISTS Section;
+DROP TABLE IF EXISTS Category;
+DROP TABLE IF EXISTS Student;
+DROP TABLE IF EXISTS Attended;
+
+CREATE TABLE Section (
+    label VARCHAR(2),
+    PRIMARY KEY (label)
+);
+
+CREATE TABLE Category (
+    category VARCHAR(15),
+    score INT,
+    PRIMARY KEY (category)
+);
+
+CREATE TABLE Student (
+    id INT,
+    first_name VARCHAR(25),
+    last_name VARCHAR(25),
+    section VARCHAR(2),
+    PRIMARY KEY (id),
+    FOREIGN KEY (section) REFERENCES Section
+);
+
+CREATE TABLE Attended (
+    id INT,
+    class_date DATETIME,
+    section VARCHAR(2),
+    attended VARCHAR(15),
+    PRIMARY KEY (id, class_date, section),
+    FOREIGN KEY (section) REFERENCES Section,
+    FOREIGN KEY (attended) REFERENCES Category
+);
